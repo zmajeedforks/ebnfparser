@@ -2,13 +2,13 @@ Grammar
 
     0 $accept: grammar $end
 
-    1 grammar: header rules postprocess
+    1 grammar: header postprocess
+    2        | header rules postprocess
 
-    2 rules: rule
-    3      | rules V_RULE_SEP rule
+    3 rules: rule
+    4      | rules V_RULE_SEP rule
 
-    4 rule: ε
-    5     | NONTERMINAL "::=" rhs
+    5 rule: NONTERMINAL "::=" rhs
 
     6 rhs: alternative
     7    | see_syntax_rules
@@ -59,7 +59,7 @@ Terminals, with rules where they appear
     "|" (264) 10
     "!!" (265) 27
     "see syntax rules" (266) 27
-    V_RULE_SEP (267) 3
+    V_RULE_SEP (267) 4
     NONTERMINAL <string> (268) 5 20
     TOKEN <string> (269) 21
     LITERAL <string> (270) 22
@@ -71,14 +71,14 @@ Nonterminals, with rules where they appear
     $accept (17)
         on left: 0
     grammar <Grammar> (18)
-        on left: 1
+        on left: 1 2
         on right: 0
     rules <vector<Rule>> (19)
-        on left: 2 3
-        on right: 1 3
+        on left: 3 4
+        on right: 2 4
     rule <Rule> (20)
-        on left: 4 5
-        on right: 2 3
+        on left: 5
+        on right: 3 4
     rhs <vector<Alternative>> (21)
         on left: 6 7 8
         on right: 5
@@ -105,7 +105,7 @@ Nonterminals, with rules where they appear
         on right: 15
     header <Header> (29)
         on left: 23 24
-        on right: 1
+        on right: 1 2
     header_lines <vector<string>> (30)
         on left: 25 26
         on right: 24 26
@@ -114,7 +114,7 @@ Nonterminals, with rules where they appear
         on right: 7 8
     postprocess (32)
         on left: 28
-        on right: 1
+        on right: 1 2
 
 
 State 0
@@ -146,22 +146,24 @@ State 2
 
 State 3
 
-    1 grammar: header • rules postprocess
+    1 grammar: header • postprocess
+    2        | header • rules postprocess
 
     NONTERMINAL  shift, and go to state 6
 
-    $default  reduce using rule 4 (rule)
+    $default  reduce using rule 28 (postprocess)
 
-    rules  go to state 7
-    rule   go to state 8
+    rules        go to state 7
+    rule         go to state 8
+    postprocess  go to state 9
 
 
 State 4
 
-   24 header: header_lines •  [$end, V_RULE_SEP, NONTERMINAL]
+   24 header: header_lines •  [$end, NONTERMINAL]
    26 header_lines: header_lines • HEADER_LINE
 
-    HEADER_LINE  shift, and go to state 9
+    HEADER_LINE  shift, and go to state 10
 
     $default  reduce using rule 24 (header)
 
@@ -177,327 +179,332 @@ State 6
 
     5 rule: NONTERMINAL • "::=" rhs
 
-    "::="  shift, and go to state 10
+    "::="  shift, and go to state 11
 
 
 State 7
 
-    1 grammar: header rules • postprocess
-    3 rules: rules • V_RULE_SEP rule
+    2 grammar: header rules • postprocess
+    4 rules: rules • V_RULE_SEP rule
 
-    V_RULE_SEP  shift, and go to state 11
+    V_RULE_SEP  shift, and go to state 12
 
     $default  reduce using rule 28 (postprocess)
 
-    postprocess  go to state 12
+    postprocess  go to state 13
 
 
 State 8
 
-    2 rules: rule •
+    3 rules: rule •
 
-    $default  reduce using rule 2 (rules)
+    $default  reduce using rule 3 (rules)
 
 
 State 9
+
+    1 grammar: header postprocess •
+
+    $default  reduce using rule 1 (grammar)
+
+
+State 10
 
    26 header_lines: header_lines HEADER_LINE •
 
     $default  reduce using rule 26 (header_lines)
 
 
-State 10
+State 11
 
     5 rule: NONTERMINAL "::=" • rhs
 
-    "["          shift, and go to state 13
-    "{"          shift, and go to state 14
-    "!!"         shift, and go to state 15
-    NONTERMINAL  shift, and go to state 16
-    TOKEN        shift, and go to state 17
-    LITERAL      shift, and go to state 18
+    "["          shift, and go to state 14
+    "{"          shift, and go to state 15
+    "!!"         shift, and go to state 16
+    NONTERMINAL  shift, and go to state 17
+    TOKEN        shift, and go to state 18
+    LITERAL      shift, and go to state 19
 
-    rhs               go to state 19
-    alternative       go to state 20
-    concatenation     go to state 21
-    repetition        go to state 22
-    item              go to state 23
-    optional          go to state 24
-    group             go to state 25
-    symbol            go to state 26
-    see_syntax_rules  go to state 27
-
-
-State 11
-
-    3 rules: rules V_RULE_SEP • rule
-
-    NONTERMINAL  shift, and go to state 6
-
-    $default  reduce using rule 4 (rule)
-
-    rule  go to state 28
+    rhs               go to state 20
+    alternative       go to state 21
+    concatenation     go to state 22
+    repetition        go to state 23
+    item              go to state 24
+    optional          go to state 25
+    group             go to state 26
+    symbol            go to state 27
+    see_syntax_rules  go to state 28
 
 
 State 12
 
-    1 grammar: header rules postprocess •
+    4 rules: rules V_RULE_SEP • rule
 
-    $default  reduce using rule 1 (grammar)
+    NONTERMINAL  shift, and go to state 6
+
+    rule  go to state 29
 
 
 State 13
 
-   18 optional: "[" • alternative "]"
+    2 grammar: header rules postprocess •
 
-    "["          shift, and go to state 13
-    "{"          shift, and go to state 14
-    NONTERMINAL  shift, and go to state 16
-    TOKEN        shift, and go to state 17
-    LITERAL      shift, and go to state 18
-
-    alternative    go to state 29
-    concatenation  go to state 21
-    repetition     go to state 22
-    item           go to state 23
-    optional       go to state 24
-    group          go to state 25
-    symbol         go to state 26
+    $default  reduce using rule 2 (grammar)
 
 
 State 14
 
-   19 group: "{" • alternative "}"
+   18 optional: "[" • alternative "]"
 
-    "["          shift, and go to state 13
-    "{"          shift, and go to state 14
-    NONTERMINAL  shift, and go to state 16
-    TOKEN        shift, and go to state 17
-    LITERAL      shift, and go to state 18
+    "["          shift, and go to state 14
+    "{"          shift, and go to state 15
+    NONTERMINAL  shift, and go to state 17
+    TOKEN        shift, and go to state 18
+    LITERAL      shift, and go to state 19
 
     alternative    go to state 30
-    concatenation  go to state 21
-    repetition     go to state 22
-    item           go to state 23
-    optional       go to state 24
-    group          go to state 25
-    symbol         go to state 26
+    concatenation  go to state 22
+    repetition     go to state 23
+    item           go to state 24
+    optional       go to state 25
+    group          go to state 26
+    symbol         go to state 27
 
 
 State 15
 
-   27 see_syntax_rules: "!!" • "see syntax rules"
+   19 group: "{" • alternative "}"
 
-    "see syntax rules"  shift, and go to state 31
+    "["          shift, and go to state 14
+    "{"          shift, and go to state 15
+    NONTERMINAL  shift, and go to state 17
+    TOKEN        shift, and go to state 18
+    LITERAL      shift, and go to state 19
+
+    alternative    go to state 31
+    concatenation  go to state 22
+    repetition     go to state 23
+    item           go to state 24
+    optional       go to state 25
+    group          go to state 26
+    symbol         go to state 27
 
 
 State 16
+
+   27 see_syntax_rules: "!!" • "see syntax rules"
+
+    "see syntax rules"  shift, and go to state 32
+
+
+State 17
 
    20 symbol: NONTERMINAL •
 
     $default  reduce using rule 20 (symbol)
 
 
-State 17
+State 18
 
    21 symbol: TOKEN •
 
     $default  reduce using rule 21 (symbol)
 
 
-State 18
+State 19
 
    22 symbol: LITERAL •
 
     $default  reduce using rule 22 (symbol)
 
 
-State 19
+State 20
 
     5 rule: NONTERMINAL "::=" rhs •
 
     $default  reduce using rule 5 (rule)
 
 
-State 20
+State 21
 
     6 rhs: alternative •  [$end, V_RULE_SEP]
     8    | alternative • see_syntax_rules
    10 alternative: alternative • "|" concatenation
 
-    "|"   shift, and go to state 32
-    "!!"  shift, and go to state 15
+    "|"   shift, and go to state 33
+    "!!"  shift, and go to state 16
 
     $default  reduce using rule 6 (rhs)
 
-    see_syntax_rules  go to state 33
+    see_syntax_rules  go to state 34
 
 
-State 21
+State 22
 
     9 alternative: concatenation •  [$end, "]", "}", "|", "!!", V_RULE_SEP]
    12 concatenation: concatenation • repetition
 
-    "["          shift, and go to state 13
-    "{"          shift, and go to state 14
-    NONTERMINAL  shift, and go to state 16
-    TOKEN        shift, and go to state 17
-    LITERAL      shift, and go to state 18
+    "["          shift, and go to state 14
+    "{"          shift, and go to state 15
+    NONTERMINAL  shift, and go to state 17
+    TOKEN        shift, and go to state 18
+    LITERAL      shift, and go to state 19
 
     $default  reduce using rule 9 (alternative)
 
-    repetition  go to state 34
-    item        go to state 23
-    optional    go to state 24
-    group       go to state 25
-    symbol      go to state 26
+    repetition  go to state 35
+    item        go to state 24
+    optional    go to state 25
+    group       go to state 26
+    symbol      go to state 27
 
 
-State 22
+State 23
 
    11 concatenation: repetition •
 
     $default  reduce using rule 11 (concatenation)
 
 
-State 23
+State 24
 
    13 repetition: item •  [$end, "[", "]", "{", "}", "|", "!!", V_RULE_SEP, NONTERMINAL, TOKEN, LITERAL]
    14           | item • "..."
 
-    "..."  shift, and go to state 35
+    "..."  shift, and go to state 36
 
     $default  reduce using rule 13 (repetition)
 
 
-State 24
+State 25
 
    16 item: optional •
 
     $default  reduce using rule 16 (item)
 
 
-State 25
+State 26
 
    17 item: group •
 
     $default  reduce using rule 17 (item)
 
 
-State 26
+State 27
 
    15 item: symbol •
 
     $default  reduce using rule 15 (item)
 
 
-State 27
+State 28
 
     7 rhs: see_syntax_rules •
 
     $default  reduce using rule 7 (rhs)
 
 
-State 28
-
-    3 rules: rules V_RULE_SEP rule •
-
-    $default  reduce using rule 3 (rules)
-
-
 State 29
 
-   10 alternative: alternative • "|" concatenation
-   18 optional: "[" alternative • "]"
+    4 rules: rules V_RULE_SEP rule •
 
-    "]"  shift, and go to state 36
-    "|"  shift, and go to state 32
+    $default  reduce using rule 4 (rules)
 
 
 State 30
 
    10 alternative: alternative • "|" concatenation
-   19 group: "{" alternative • "}"
+   18 optional: "[" alternative • "]"
 
-    "}"  shift, and go to state 37
-    "|"  shift, and go to state 32
+    "]"  shift, and go to state 37
+    "|"  shift, and go to state 33
 
 
 State 31
+
+   10 alternative: alternative • "|" concatenation
+   19 group: "{" alternative • "}"
+
+    "}"  shift, and go to state 38
+    "|"  shift, and go to state 33
+
+
+State 32
 
    27 see_syntax_rules: "!!" "see syntax rules" •
 
     $default  reduce using rule 27 (see_syntax_rules)
 
 
-State 32
+State 33
 
    10 alternative: alternative "|" • concatenation
 
-    "["          shift, and go to state 13
-    "{"          shift, and go to state 14
-    NONTERMINAL  shift, and go to state 16
-    TOKEN        shift, and go to state 17
-    LITERAL      shift, and go to state 18
+    "["          shift, and go to state 14
+    "{"          shift, and go to state 15
+    NONTERMINAL  shift, and go to state 17
+    TOKEN        shift, and go to state 18
+    LITERAL      shift, and go to state 19
 
-    concatenation  go to state 38
-    repetition     go to state 22
-    item           go to state 23
-    optional       go to state 24
-    group          go to state 25
-    symbol         go to state 26
+    concatenation  go to state 39
+    repetition     go to state 23
+    item           go to state 24
+    optional       go to state 25
+    group          go to state 26
+    symbol         go to state 27
 
 
-State 33
+State 34
 
     8 rhs: alternative see_syntax_rules •
 
     $default  reduce using rule 8 (rhs)
 
 
-State 34
+State 35
 
    12 concatenation: concatenation repetition •
 
     $default  reduce using rule 12 (concatenation)
 
 
-State 35
+State 36
 
    14 repetition: item "..." •
 
     $default  reduce using rule 14 (repetition)
 
 
-State 36
+State 37
 
    18 optional: "[" alternative "]" •
 
     $default  reduce using rule 18 (optional)
 
 
-State 37
+State 38
 
    19 group: "{" alternative "}" •
 
     $default  reduce using rule 19 (group)
 
 
-State 38
+State 39
 
    10 alternative: alternative "|" concatenation •  [$end, "]", "}", "|", "!!", V_RULE_SEP]
    12 concatenation: concatenation • repetition
 
-    "["          shift, and go to state 13
-    "{"          shift, and go to state 14
-    NONTERMINAL  shift, and go to state 16
-    TOKEN        shift, and go to state 17
-    LITERAL      shift, and go to state 18
+    "["          shift, and go to state 14
+    "{"          shift, and go to state 15
+    NONTERMINAL  shift, and go to state 17
+    TOKEN        shift, and go to state 18
+    LITERAL      shift, and go to state 19
 
     $default  reduce using rule 10 (alternative)
 
-    repetition  go to state 34
-    item        go to state 23
-    optional    go to state 24
-    group       go to state 25
-    symbol      go to state 26
+    repetition  go to state 35
+    item        go to state 24
+    optional    go to state 25
+    group       go to state 26
+    symbol      go to state 27

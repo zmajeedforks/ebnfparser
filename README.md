@@ -1,9 +1,9 @@
 # A Grammar and Parser for EBNF
 
-This Bison grammar was written to parse the extended BNF notation used to specify the GQL Graph Query Language in the ISO-39075:2024 standard.
+This Bison BNF grammar was written to parse the extended BNF notation used to specify the GQL Graph Query Language in the ISO-39075:2024 standard.
 
 ```bison
-grammar: header rules
+grammar: header | header rules
 
 rules: rule | rules RULE_SEP rule
 
@@ -28,11 +28,11 @@ header: %empty | header_lines
 header_lines: HEADER_LINE | header_lines HEADER_LINE
 ```
 
-The complete grammar is at [`src/grammar/ebnf_parser.bison.y`](src/grammar/ebnf_parser.bison.y).
+The complete grammar is at [`src/grammar/ebnf_parser.rules.bison.y`](src/grammar/ebnf_parser.rules.bison.y).
 
 The grammar allows freeform text before the first rule that may be considered a header section of sorts.
 
-Comments in general are not supported elsewhere. But there is an element called `SeeTheRules` that looks like `!! See the Syntax Rules.` - it seems `SeeTheRules` occurs at the end of the rhs of a rule by itself or immediately after the alternatives. It may be thought of as a specific type of comment that has out-of-band information. It's not shown above because it makes the grammar a bit ugly and clunky.
+Comments in general are not supported elsewhere. But there is an element called `SeeTheRules` that looks like `!! See the Syntax Rules.` - it seems `SeeTheRules` occurs at the end of the RHS of a rule by itself or immediately after the alternatives. It may be thought of as a specific type of comment that has out-of-band information. It's not shown above because it makes the grammar a bit ugly and clunky.
 
 The `RULE_SEP` token is not an actual character or string. Rather it's a virtual token returned by the lexer to signal the end of a rule when needed.
 
@@ -44,9 +44,35 @@ Also `concatenation` has higher precedence than `alternative` because `alternati
 alternative: concatenation | alternative "|" concatenation
 ```
 
+The three dots `...` repetition operator means repeat 1 or more times, not zero or more times like repetition in other EBNF variants. Use both optional and repetition operators to represent zero or more repetitions.
+
+Here's the EBNF version of the the BNF grammar above - this is really meta and recursive but it's a good short example of the syntax - you just need to keep the literals for the grammar operators like `"..."` and the operators themselves like `...` straight.
+
+```
+grammar ::= [ header ] rules
+
+rules ::= rule [ { RULE_SEP rule } ... ]
+
+rule ::= NONTERMINAL "::=" alternative
+
+alternative ::= concatenation [ { "|" concatenation } ... ]
+
+concatenation ::= repetition ...
+
+repetition ::= { symbol | optional | group } [ "..." ]
+
+group ::= "{" alternative "}"
+
+optional ::= "[" alternative "]"
+
+symbol ::= NONTERMINAL | TOKEN | LITERAL
+
+header ::= [ HEADER_LINE ... ]
+```
+
 The GQL EBNF notation is briefly described in https://standards.iso.org/iso-iec/39075/ed-1/en/ISO_IEC_39075(en).bnf.xml. The grammar is available in EBNF form at https://standards.iso.org/iso-iec/39075/ed-1/en/ISO_IEC_39075(en).bnf.txt.
 
-This EBNF variant was first used to define the SQL language for ISO-9075. It's still used in the latest SQL standard ISO-9075:2023.
+This EBNF variant was first used to define the SQL language for ISO-9075. It's still used in the latest SQL standard ISO-9075:2023. It's described in the XML version of the SQL grammar at https://standards.iso.org/iso-iec/9075/-2/ed-6/en/ISO_IEC_9075-2(E)_Foundation.bnf.xml. The SQL grammar in EBNF format is at https://standards.iso.org/iso-iec/9075/-2/ed-6/en/ISO_IEC_9075-2(E)_Foundation.bnf.txt - but it doesn't describe the EBNF itself.
 
 As far as I can tell this EBNF variant is unique to these two standards and hasn't been used anywhere else. But its features are typical of other extended BNF syntaxes.
 
@@ -73,9 +99,9 @@ The grammar is also described in Section 5.2 of ISO-39075:2024.
 > !!  
 > Introduces either a reference to the Syntax Rules, used when the definition of a syntactic element is not expressed in BNF, or the Unicode code point or code point sequence that define the character(s) of the BNF production.
 
-I could not find a BNF or Bison grammar for GQL when I wrote this parser. The parser fully parses the GQL specification in docs/gqlgrammar.txt which is a slightly modified and corrected version of https://standards.iso.org/iso-iec/39075/ed-1/en/ISO_IEC_39075(en).bnf.txt. The goal is to use the parser to generate a Bison grammar from GQL EBNF. The generated Bison grammar can then be used to write parsers for graph queries in GQL.
+I could not find a BNF or Bison grammar for GQL when I wrote this parser. The parser fully parses the GQL specification in [`data/gqlgrammar.quotedliterals.txt`](data/gqlgrammar.quotedliterals.txt) which is a slightly modified and corrected version of https://standards.iso.org/iso-iec/39075/ed-1/en/ISO_IEC_39075(en).bnf.txt. The goal is to use the parser to generate a Bison grammar from GQL EBNF. The generated Bison grammar can then be used to write parsers for graph queries in GQL.
 
-The differences between ISO_IEC_39075(en).bnf.txt and docs/gqlgrammar.txt are
+The differences between ISO_IEC_39075(en).bnf.txt and [`data/gqlgrammar.quotedliterals.txt`](data/gqlgrammar.quotedliterals.txt) are
 
 - Literal strings and characters are quoted
 - A stray alternative operator in the rule for `<pre-reserved word>` has been deleted
@@ -85,16 +111,23 @@ The differences between ISO_IEC_39075(en).bnf.txt and docs/gqlgrammar.txt are
 ## Build And Test
 
 Build with `cmake` and `make`
-
 ```
 cmake -B build -S .
 
 make -C build
 ```
 
+Test the parser. It's very fast - it parses nearly 1,000 rules of GQL in 15 milliseconds
+```
+build/src/parser/ebnfparse --stats data/gqlgrammar.quotedliterals.txt
+
+parse time: 0.015 sec
+lex_time 0.002 sec
+```
+
 Run the converter `ebnftobison`
 ```
-build/src/ebnftobison/parser/ebnftobison docs/gqlgrammar.quotedliterals.txt
+build/src/ebnftobison/parser/ebnftobison data/gqlgrammar.quotedliterals.txt
 ```
 
 Run unit tests with `ctest`
@@ -106,7 +139,7 @@ ctest --test-dir build
 
 Bison and Flex rules files are in `src/grammar` - source files generated by Bison and Flex are in the corresponding `src/grammar` directory in the build tree. Parser tests and a standalone parser executable are in `src/parser`. The lexer class and tests are in `src/lexer`.
 
-The GQL grammar file is in [`docs/`](docs/).
+The original GQL grammar files are in [`docs/`](docs/).
 
 ## Note On Using C++ With Flex And Bison
 
@@ -114,7 +147,7 @@ The parser and lexer are written in C++. Both Flex and Bison support C++ very we
 
 This is enabled with the `%define api.value.type variant` Bison directive. It completely removes the need for memory management and frees your code of `new` and `delete`. Even better there's no pointer-chasing  `->` syntax to read or write. Just that simple elimination makes the code immensely more readable and easier to understand.
 
-After lambdas were introduced in C++, I discovered the trick of defining `yylex()` to be a lambda member of the parser. This is done by passing `yylex()` as a parameter to the parser constructor.
+After lambdas were introduced in C++, I discovered the technique of defining `yylex()` to be a lambda member of the parser. This is done by passing `yylex()` as a parameter to the parser constructor.
 
 ```
 %parse-param {function<EbnfParser::symbol_type(LexParam&)> yylex}
