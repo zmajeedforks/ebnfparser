@@ -200,11 +200,11 @@ void ebnfparser::EbnfParser::error(const location& loc, const string& msg) {
 
 // no code allowed in rules section, just bison comments that are dropped from .cpp
 
-grammar: header rules postprocess
+grammar: header postprocess | header rules postprocess
 
 rules: rule | rules V_RULE_SEP rule
 
-rule: %empty | NONTERMINAL "::=" rhs
+rule: NONTERMINAL "::=" rhs
 
 rhs: alternative | see_syntax_rules | alternative see_syntax_rules
 
@@ -332,7 +332,7 @@ int main(int argc, char* argv[])
   }
 
   if(printStats) {
-    printf("parse time: %.9f secs\n", bisonParam.parseTimeTakenSec.count());
+    printf("parse time: %.9f sec\n", bisonParam.parseTimeTakenSec.count());
   }
 
   return 0;

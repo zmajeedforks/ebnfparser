@@ -238,14 +238,17 @@ void ebnfparser::EbnfParser::error(const location& loc, const string& msg) {
 
 // no code allowed in rules section, just bison comments that are dropped from .cpp
 
-grammar: header rules postprocess {
+grammar: header postprocess {
+  $$.header = move($header);
+  bisonParam.ast = move($$);
+}
+| header rules postprocess {
   $$.header = move($header);
   $$.rules = move($rules);
   bisonParam.ast = move($$);
 }
 
-rules:
-  rule {
+rules: rule {
   if($rule.nonterminal.empty()) {
     break;
   }
@@ -259,16 +262,12 @@ rules:
   $$.push_back(move($rule));
 }
 
-rule:
-  %empty {
-}
-| NONTERMINAL "::=" rhs {
+rule: NONTERMINAL "::=" rhs {
   $$.nonterminal = move($NONTERMINAL);
   $$.alternatives = move($rhs);
 }
 
-rhs:
-  alternative {
+rhs: alternative {
   $$.push_back($alternative);
 }
 | see_syntax_rules {
@@ -277,8 +276,7 @@ rhs:
   $$.push_back($alternative);
 }
 
-alternative:
-  concatenation {
+alternative: concatenation {
   $$.concats.push_back(move($concatenation));
 }
 | alternative "|" concatenation {
@@ -286,8 +284,7 @@ alternative:
   $$.concats.push_back(move($concatenation));
 }
 
-concatenation:
-  repetition {
+concatenation: repetition {
   $$.reps.push_back(move($repetition));
 }
 | concatenation repetition {
@@ -295,8 +292,7 @@ concatenation:
   $$.reps.push_back(move($repetition));
 }
 
-repetition:
-  item {
+repetition: item {
   $$.item = move($item);
   $$.isRepeated = false;
 }
@@ -305,8 +301,7 @@ repetition:
   $$.isRepeated = true;
 }
 
-item:
-  symbol {
+item: symbol {
   $$ = move($symbol);
 }
 | optional {
@@ -324,8 +319,7 @@ group: "{" alternative "}" {
   $$.concats = move($alternative.concats);
 }
 
-symbol:
-  NONTERMINAL {
+symbol: NONTERMINAL {
   $$ = move($NONTERMINAL);
 }
 | TOKEN {
@@ -335,15 +329,13 @@ symbol:
   $$ = move($LITERAL);
 }
 
-header:
-  %empty {
+header: %empty {
 }
 | header_lines {
   $$.lines = move($header_lines);
 }
 
-header_lines:
-  HEADER_LINE {
+header_lines: HEADER_LINE {
   $$.push_back(move($HEADER_LINE));
 }
 | header_lines HEADER_LINE {
@@ -382,27 +374,24 @@ using namespace std;
 using namespace ebnfparser;
 
 void usage() {
-  puts("Usage: ebnfparse [-h | --help] [--debug] [--stats] [file]");
-  puts("Parses valid EBNF as defined in Section 5.2 of the GQL ISO-39075:2024 standard");
-  puts("Prints nothing if parse succeeds, otherwise prints an error message with line number");
-  puts("");
-  puts("Options:");
-  puts("--debug: turns on Bison parser and Flex lexer debug traces, off by default");
-  puts("--stats: print timing stats on successful parse, off by default");
-  puts("--help | -h: prints usage help");
-  puts("file: EBNF grammar file, use stdin if no file or file is \"-\"");
+  println("Usage: ebnfparse [-h | --help] [--debug] [--stats] [file]");
+  println("Parses valid EBNF as defined in Section 5.2 of the GQL ISO-39075:2024 standard");
+  println("Prints nothing if parse succeeds, otherwise prints an error message with line number");
+  println("");
+  println("Options:");
+  println("--debug: turns on Bison parser and Flex lexer debug traces, off by default");
+  println("--stats: print timing stats on successful parse, off by default");
+  println("--help | -h: prints usage help");
+  println("file: EBNF grammar file, use stdin if no file or file is \"-\"");
 }
 
 int main(int argc, char* argv[])
 {
-  ios_base::sync_with_stdio(false);
-
   bool debug{};
   bool printStats{};
 
 // need filename pointer to stick around for bison error messages that print filename and position
   auto inputFilename = make_unique<string>("stdin");
-  string changefile;
 
   option opts[] = {
     {"debug", no_argument, (int*)&debug, 1},
@@ -446,13 +435,13 @@ int main(int argc, char* argv[])
   BisonParam bisonParam;
   LexParam lexParam{.loc = location(inputFilename.get())};
 
-  duration<double> yylexSecs{};
+  duration<double> yylexSec{};
 
-  EbnfParser parser([&lexer, &yylexSecs](LexParam& lexParam) -> EbnfParser::symbol_type {
+  EbnfParser parser([&lexer, &yylexSec](LexParam& lexParam) -> EbnfParser::symbol_type {
     time_point<steady_clock> start = steady_clock::now();
     auto token = lexer.yylex(lexParam);
     time_point<steady_clock> end = steady_clock::now();
-    yylexSecs += end - start;
+    yylexSec += end - start;
     return token;
   },
   bisonParam,
@@ -467,9 +456,9 @@ int main(int argc, char* argv[])
   }
 
   if(printStats) {
-    const auto& [_, _, parseSecs] = bisonParam.stats;
-    println("parse time: {:.9f} secs", parseSecs.count());
-    println("lex_time {:.9f} sec", yylexSecs.count());
+    const auto& [_, _, parseSec] = bisonParam.stats;
+    println("parse time: {:.9f} sec", parseSec.count());
+    println("lex_time {:.9f} sec", yylexSec.count());
   }
 
   return 0;
