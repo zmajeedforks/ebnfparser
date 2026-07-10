@@ -37,8 +37,10 @@ SOFTWARE.
 // generate parser description report .output file
 %verbose
 
+/*
 %defines "ebnf_parser.bison.h"
 %output "ebnf_parser.bison.cpp"
+*/
 
 // enable debug trace
 %define parse.trace

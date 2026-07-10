@@ -3,7 +3,7 @@
 This Bison BNF grammar was written to parse the extended BNF notation used to specify the GQL Graph Query Language in the ISO-39075:2024 standard.
 
 ```bison
-grammar: header | header rules
+ebnf: header | header rules
 
 rules: rule | rules RULE_SEP rule
 
@@ -40,7 +40,7 @@ The two binary operators, `concatenation` and `alternative`, are left-associativ
 
 Also `concatenation` has higher precedence than `alternative` because `alternative` derives from `concatenation` by the rule
 
-```
+```bison
 alternative: concatenation | alternative "|" concatenation
 ```
 
@@ -48,26 +48,26 @@ The three dots `...` repetition operator means repeat 1 or more times, not zero 
 
 Here's the EBNF version of the the BNF grammar above - this is really meta and recursive but it's a good short example of the syntax - you just need to keep the literals for the grammar operators like `"..."` and the operators themselves like `...` straight.
 
-```
-grammar ::= [ header ] rules
+```ebnf
+<ebnf> ::= [ <header> ] <rules>
 
-rules ::= rule [ { RULE_SEP rule } ... ]
+<rules> ::= <rule> [ { RULE_SEP <rule> } ... ]
 
-rule ::= NONTERMINAL "::=" alternative
+<rule> ::= NONTERMINAL "::=" <alternative>
 
-alternative ::= concatenation [ { "|" concatenation } ... ]
+<alternative> ::= <concatenation> [ { "|" <concatenation> } ... ]
 
-concatenation ::= repetition ...
+<concatenation> ::= <repetition> ...
 
-repetition ::= { symbol | optional | group } [ "..." ]
+<repetition> ::= { <symbol> | <optional> | <group> } [ "..." ]
 
-group ::= "{" alternative "}"
+<group> ::= "{" <alternative> "}"
 
-optional ::= "[" alternative "]"
+<optional> ::= "[" <alternative> "]"
 
-symbol ::= NONTERMINAL | TOKEN | LITERAL
+<symbol> ::= NONTERMINAL | TOKEN | LITERAL
 
-header ::= [ HEADER_LINE ... ]
+<header> ::= [ HEADER_LINE ... ]
 ```
 
 The GQL EBNF notation is briefly described in https://standards.iso.org/iso-iec/39075/ed-1/en/ISO_IEC_39075(en).bnf.xml. The grammar is available in EBNF form at https://standards.iso.org/iso-iec/39075/ed-1/en/ISO_IEC_39075(en).bnf.txt.
@@ -354,39 +354,69 @@ Group factors out common elements from multiple choices leaving distinct element
 
 #### BNF
 
+```bison
 r: A B | A C | A D |
 s: X Z | Y Z
+```
 
 #### EBNF
 
-r ::= A { B | C | D }
-s ::= { X | Y } Z
+```ebnf
+<r> ::= A { B | C | D }
+<s> ::= { X | Y } Z
+```
 
 ### Optional
 
 #### BNF
 
+```bison
 r: A | A B
 s: t C
 t: %empty | T
+```
 
 #### EBNF
 
-r ::= A [ B ]
-s ::= [ T ] C
+```ebnf
+<r> ::= A [ B ]
+<s> ::= [ T ] C
+```
 
 
 ### Repetition
 
 #### BNF
 
+```bison
 r: A | r A
 s: B | s "," B
+t: u | v
+t_list: t | t_list t
+```
 
 #### EBNF
 
-r ::= A ...
-s ::= B { "," B } ...
+```ebnf
+<r> ::= A ...
+<s> ::= B [ { "," B } ... ]
+<t> ::= { u | v } ...
+```
+
+#### EBNF to BNF
+
+```bison
+r: A_list
+A_list : A | A_list A
+
+s: B | B group_0_list
+group_0: "," B
+group_0_list: group_0 | group_0_list group_0
+
+t: group_1_list
+group_1: u | v
+group_1_list: group_1 | group_1_list group_1
+```
 
 Thus converting EBNF to BNF means a single rule can turn into multiple rules.
 
@@ -401,25 +431,27 @@ The set of equivalent BNF rules fall into two categories. A new BNF rule could b
 Nonterminal names are made valid for Bison. Surrounding angle brackets are removed. Any characters not in `[a-zA-Z0-9_]` are replaced with underscores.
 
 Input EBNF
-```
+```ebnf
 <nested query specification> ::=
     <left brace> <query specification> <right brace>
 ```
+
 Output BNF
-```
+```bison
 nested_query_specification:
   left_brace  query_specification  right_brace
 ```
 
 Input EBNF
-```
+```ebnf
 <binding variable definition> ::=
     <graph variable definition>
   | <binding table variable definition>
   | <value variable definition>
 ```
+
 Output BNF
-```
+```bison
 binding_variable_definition:
   binding_table_variable_definition
 |  graph_variable_definition
@@ -429,12 +461,13 @@ binding_variable_definition:
 Each optional expression splits a production into two. One with the expression, the other without
 
 Input EBNF
-```
+```ebnf
 <next statement> ::=
     NEXT [ <yield clause> ] <statement>
 ```
+
 Output BNF
-```
+```bison
 next_statement:
   NEXT  statement
 |  NEXT  yield_clause  statement
@@ -443,12 +476,13 @@ next_statement:
 Optional expressions can be nested
 
 Input EBNF
-```
+```ebnf
 <opt typed graph initializer> ::=
     [ [ <typed> ] <graph reference value type> ] <graph initializer>
 ```
+
 Output BNF
-```
+```bison
 opt_typed_graph_initializer:
   graph_initializer
 |  graph_reference_value_type  graph_initializer
@@ -458,12 +492,13 @@ opt_typed_graph_initializer:
 A nonterminal with repetition is replaced with a new nonterminal with the same name plus a "\_list" suffix. Also a new left-recursive rule is created that generates one or more of the original nonterminal.
 
 Input EBNF
-```
+```ebnf
 <binding variable definition block> ::=
     <binding variable definition>...
 ```
+
 Output BNF
-```
+```bison
 binding_variable_definition_block:
   binding_variable_definition_list
 
@@ -471,15 +506,17 @@ binding_variable_definition_list:
   binding_variable_definition
 |  binding_variable_definition_list  binding_variable_definition
 ```
+
 Here's an example of an optional repetition of a single nonterminal
 
 Input EBNF
-```
+```ebnf
 <statement block> ::=
     <statement> [ <next statement>... ]
 ```
+
 Output BNF
-```
+```bison
 statement_block:
   statement
 |  statement  next_statement_list
@@ -488,18 +525,20 @@ next_statement_list:
   next_statement
 |  next_statement_list  next_statement
 ```
+
 Groups are expanded by distributing the expression outside the group over the expressions inside the group
 
 Input EBNF
-```
+```ebnf
 <session set command> ::=
     SESSION SET { <session set schema clause>
   | <session set graph clause>
   | <session set time zone clause>
   | <session set parameter clause> }
 ```
+
 Output BNF
-```
+```bison
 session_set_command:
   SESSION  SET  session_set_graph_clause
 |  SESSION  SET  session_set_parameter_clause
@@ -510,12 +549,13 @@ session_set_command:
 Repetition on a group is different based on whether it's a concatenation group or a group of alternative. Repetition of a concatenation group is transformed similarly to repetition of a symbol. A left-recursive rule is created to derive infinite sequences of the expression. The name of the new nonterminal is formed by joining the names of the elements in the expression with underscores and adding a "\_list" suffix.
 
 Input EBNF
-```
+```ebnf
 <transaction characteristics> ::=
     <transaction mode> [ { <comma> <transaction mode> }... ]
 ```
+
 Output BNF
-```
+```bison
 transaction_characteristics:
   transaction_mode
 |  transaction_mode  comma_transaction_mode_list
@@ -524,18 +564,20 @@ comma_transaction_mode_list:
   comma  transaction_mode
 |  comma_transaction_mode_list  comma  transaction_mode
 ```
+
 Here's an example of a group with optionals on both sides of an alternative.
 
 Input EBNF
-```
+```ebnf
 <create graph type statement> ::=
     CREATE
          { [ PROPERTY ] GRAPH TYPE [ IF NOT EXISTS ]
   | OR REPLACE [ PROPERTY ] GRAPH TYPE }
          <catalog graph type parent and name> <graph type source>
 ```
+
 Output BNF
-```
+```bison
 create_graph_type_statement:
   CREATE  GRAPH  TYPE  IF  NOT  EXISTS  catalog_graph_type_parent_and_name  graph_type_source
 |  CREATE  GRAPH  TYPE  catalog_graph_type_parent_and_name  graph_type_source
@@ -548,13 +590,14 @@ create_graph_type_statement:
 Repetition on group of alternative generates two new nonterminals and rules. First the group is replaced with a new nonterminal for the group. Then the single new nonterminal is replaced with another new nonterminal for a list.
 
 Input EBNF
-```
+```ebnf
 <separator> ::=
     { <comment>
   | <whitespace> }...
 ```
+
 Output BNF
-```
+```bison
 separator:
   choice_group_0_list
 
