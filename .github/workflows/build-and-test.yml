@@ -2,9 +2,9 @@ name: Build and Test
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ main ]
   pull_request:
-    branches: [ "main" ]
+    branches: [ main ]
 
 jobs:
   build:
@@ -13,21 +13,22 @@ jobs:
         include:
           - os: ubuntu-latest
             preset: linux-release
-            container_image: ebnfparser:latest 
           - os: windows-latest
             preset: windows-debug
-            container_image: ""
 
     runs-on: ${{ matrix.os }}
     
-    container: ${{ matrix.container_image != '' && matrix.container_image || null }}
-
     steps:
       - uses: actions/checkout@v4
 
-      - name: Build Docker Container
-        if: matrix.os == 'ubuntu-latest'
-        run: docker build -t ebnfparser:latest .
+      - name: Install dependencies Linux
+        if: matrix.os == ubuntu-latest
+        run: |
+          sudo add-repository ppa:ubuntu-toolchain-r/test -y
+          sudo apt update
+          sudo apt install -y gcc-16 g++-16 cmake ninja-build bison flex
+          echo "CC=gcc-16" >> $GITHUB_ENV
+          echo "CXX=g++-16" >> $GITHUB_ENV
 
       - name: Configure CMake
         run: cmake --preset ${{ matrix.preset }}
@@ -36,4 +37,4 @@ jobs:
         run: cmake --build --preset ${{ matrix.preset }}
 
       - name: Test
-        run: ctest --test-dir build/${{ matrix.preset == 'linux-release' && 'release' || 'debug' }}
+        run: ctest --preset ${{ matrix.preset }}
