@@ -9,8 +9,8 @@
       "binaryDir": "${sourceDir}/build/release",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release",
-        "CMAKE_CXX_COMPILER": "/usr/bin/g++-16",
-        "CMAKE_C_COMPILER": "/usr/bin/gcc-16"
+        "CMAKE_CXX_COMPILER": "/usr/bin/g++",
+        "CMAKE_C_COMPILER": "/usr/bin/gcc"
       }
     },
     {

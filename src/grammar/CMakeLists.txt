@@ -61,6 +61,7 @@ add_custom_command(TARGET flexbisonlib.ebnfparser POST_BUILD
 )
 
 add_custom_command(TARGET flexbisonlib.ebnfparser POST_BUILD
+  COMMAND sed -Ei [[s/(YY_YY).*(_EBNF_PARSER_BISON_H)/\1\2/]] ${GEN_SRC_DIR}/ebnf_parser.bison.h
   COMMAND sed -Ei [[s/(YY_YY).*(_LOCATIONS_BISON_H)/\1\2/]] ${GEN_SRC_DIR}/locations.bison.h
   VERBATIM
 )

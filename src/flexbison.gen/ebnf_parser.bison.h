@@ -42,8 +42,8 @@
 // especially those whose name start with YY_ or yy_.  They are
 // private implementation details that can be changed or removed.
 
-#ifndef YY_YY_CYGDRIVE_D_WORK_GIT_ZMAJEEDFORKS_EBNFPARSER_GITBRANCHES_ZMAJEED_GENERAL_BUILD_CYG_GCC_SRC_GRAMMAR_EBNF_PARSER_BISON_H_INCLUDED
-# define YY_YY_CYGDRIVE_D_WORK_GIT_ZMAJEEDFORKS_EBNFPARSER_GITBRANCHES_ZMAJEED_GENERAL_BUILD_CYG_GCC_SRC_GRAMMAR_EBNF_PARSER_BISON_H_INCLUDED
+#ifndef YY_YY_EBNF_PARSER_BISON_H_INCLUDED
+# define YY_YY_EBNF_PARSER_BISON_H_INCLUDED
 // "%code requires" blocks.
 #line 60 "./src/grammar/ebnf_parser.bison.y"
 
@@ -2005,4 +2005,4 @@ using namespace std;
 #line 2006 "./src/flexbison.gen/ebnf_parser.bison.h"
 
 
-#endif // !YY_YY_CYGDRIVE_D_WORK_GIT_ZMAJEEDFORKS_EBNFPARSER_GITBRANCHES_ZMAJEED_GENERAL_BUILD_CYG_GCC_SRC_GRAMMAR_EBNF_PARSER_BISON_H_INCLUDED
+#endif // !YY_YY_EBNF_PARSER_BISON_H_INCLUDED
