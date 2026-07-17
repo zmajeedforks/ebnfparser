@@ -14,6 +14,26 @@
       }
     },
     {
+      "name": "linux-debug",
+      "$comment": "Debug build using GCC 16 on Linux",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/debug",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_CXX_COMPILER": "/usr/bin/g++",
+        "CMAKE_C_COMPILER": "/usr/bin/gcc"
+      }
+    },
+    {
+      "name": "windows-release",
+      "$comment": "Release build for Windows using MSVC",
+      "generator": "Visual Studio 18 2026",
+      "binaryDir": "${sourceDir}/build/release",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release"
+      }
+    },
+    {
       "name": "windows-debug",
       "$comment": "Debug build for Windows using MSVC",
       "generator": "Visual Studio 18 2026",
@@ -25,11 +45,19 @@
   ],
   "buildPresets": [
     {
-      "name": "release",
+      "name": "linux-release",
       "configurePreset": "linux-release"
     },
     {
-      "name": "debug",
+      "name": "linux-debug",
+      "configurePreset": "linux-debug"
+    },
+    {
+      "name": "windows-release",
+      "configurePreset": "windows-release"
+    },
+    {
+      "name": "windows-debug",
       "configurePreset": "windows-debug"
     }
   ]

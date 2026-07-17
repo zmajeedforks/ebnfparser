@@ -26,8 +26,25 @@ jobs:
         run: |
           sudo apt update
           sudo apt install -y gcc-16 g++-16 cmake ninja-build bison flex
+          update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-16 100
+          update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-16 100
           echo "CC=gcc-16" >> $GITHUB_ENV
           echo "CXX=g++-16" >> $GITHUB_ENV
+
+      - name: Program versions
+        run: |
+          echo "uname -a"
+          uname -a
+          echo "lsb_release -a"
+          lsb_release -a
+          echo "g++ --version"
+          g++ --version
+          echo "cmake --version"
+          cmake --version
+          echo "bison --version"
+          bison --version
+          echo "flex --version"
+          flex --version
 
       - name: Configure CMake
         run: cmake --preset ${{ matrix.preset }}
