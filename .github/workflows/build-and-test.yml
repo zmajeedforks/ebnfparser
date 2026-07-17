@@ -61,7 +61,7 @@ jobs:
           ls -l /usr/include/FlexLexer.h
 
       - name: Windows versions
-        if: matrix.os == 'windows-latest'
+        if: matrix.os == 'windows-latest' && matrix.is_cygwin == false
         run: |
           echo "--- Windows versions ---"
           echo "cmake --version"
@@ -81,7 +81,7 @@ jobs:
 
       - name: Cygwin setup
         if: matrix.is_cygwin == true
-        uses: cygwin/cygwin-install-action@v4
+        uses: cygwin/cygwin-install-action@v6
         with:
           platform: x64
           allow-test-packages: 'true'
