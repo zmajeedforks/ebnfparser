@@ -144,11 +144,15 @@ strong_ordering Item::operator<=>(const Item& other) const {
       println("Item.spaceship: unexpected default match");
       return {{}};
     },
-  }
-#if __cpp_lib_variant < 202306L
-  , *this
+
+// new c++26 variant visit member function, takes 1 parameter
+// old variant visit global function, takes 2 parameters
+#if __cpp_lib_variant >= 202306L
+  });
+#else
+  }, *this);
 #endif
-  );
+
 }
 
 
@@ -162,12 +166,8 @@ private:
 
 };
 
-// annoying ifdef and duplication of code due to differences between gcc 16 and vc++ 18
-// might go away once vc++ supports c++26 varaint visit member function
-// the problem is vc++ doesn't like this auto&& parameter for default match, has to be this const auto&
-
-// new c++26 variant visit member function, takes 1 parameter
-#if __cpp_lib_variant >= 202306L
+// annoying ifdefs due to differences between gcc 16 and vc++ 18
+// hope it goes away once vc++ supports c++26 variant visit member function
 
 inline
 void AstNode::printAst() const {
@@ -263,7 +263,14 @@ void AstNode::printAst() const {
     },
 
     [](this auto&& self, const Item& i) -> void {
+
+// new c++26 variant visit member function, takes 1 parameter
+// old variant visit global function, takes 2 parameters
+#if __cpp_lib_variant >= 202306L
       i.visit(self);
+#else
+      visit(self, i);
+#endif
     },
 
     [](this auto&&, const Symbol& s) -> void {
@@ -277,131 +284,19 @@ void AstNode::printAst() const {
     },
 
 // default match
-    [](this auto&&, const auto&) -> void {
+    [](this const auto&&, const auto&) -> void {
       println("printAst.new: unexpected default match");
     },
 
-  });
-}
-
+// new c++26 variant visit member function, takes 1 parameter
 // old variant visit global function, takes 2 parameters
+#if __cpp_lib_variant >= 202306L
+  });
 #else
-
-inline
-void AstNode::printAst() const {
-
-  visit(overload{
-
-    [](this auto&& self, const Grammar& g) -> void {
-      self(g.header);
-      for(const auto& rule: g.rules) {
-        self(rule);
-        println("\n");
-      }
-    },
-
-    [](this auto&& self, const Rule& r) -> void {
-      const auto& alts = r.alts;
-
-      print("{} ::=", r.nonterminal);
-      if(alts.empty()) {
-        return;
-      }
-      print(" ");
-      self(alts.begin()[0]);
-      for(int i = 1; i < ssize(alts); ++i) {
-        const auto& alt = alts.begin()[i];
-        print(" |");
-        self(alt);
-      }
-    },
-
-    [](this auto&& self, const Alternative& a) -> void {
-      const auto& concats = a.concats;
-
-      if(concats.empty()) {
-        return;
-      }
-      self(concats.begin()[0]);
-      for(int i = 1; i < ssize(concats); ++i) {
-        const auto& concat = concats.begin()[i];
-        print(" |");
-        self(concat);
-      }
-    },
-
-    [](this auto&& self, const Group& g) -> void {
-      const auto& concats = g.concats;
-
-      print("{{");
-
-      if(concats.empty()) {
-        return;
-      }
-      self(concats.begin()[0]);
-      for(int i = 1; i < ssize(concats); ++i) {
-        const auto& concat = concats.begin()[i];
-        print(" |");
-        self(concat);
-      }
-
-      print(" }}");
-    },
-
-    [](this auto&& self, const Optional& o) -> void {
-      const auto& concats = o.concats;
-
-      print("[");
-
-      if(concats.empty()) {
-        return;
-      }
-      self(concats.begin()[0]);
-      for(int i = 1; i < ssize(concats); ++i) {
-        const auto& concat = concats.begin()[i];
-        print(" |");
-        self(concat);
-      }
-
-      print(" ]");
-    },
-
-    [](this auto&& self, const Concatenation& c) -> void {
-      for(const auto& rep: c.reps) {
-        print(" ");
-        self(rep);
-      }
-    },
-
-    [](this auto&& self, const Repetition& r) -> void {
-      self(r.item);
-      if(r.isRepeated) {
-        print(" ...");
-      }
-    },
-
-    [](this auto&& self, const Item& i) -> void {
-      visit(self, i);
-    },
-
-    [](this auto&&, const Symbol& s) -> void {
-      print("{}", s);
-    },
-
-    [](this auto&&, const Header& h) -> void {
-      for(const auto& line: h.lines) {
-        print("{}", line);
-      }
-    },
-
-// vc++ default match must be constref this
-    [](this const auto&, const auto&) -> void {
-      println("printAst.old: unexpected default match");
-    },
   }, *this);
+#endif
 
 }
-#endif
 
 
 }

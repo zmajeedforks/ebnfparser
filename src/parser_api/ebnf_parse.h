@@ -153,12 +153,6 @@ struct EbnfParse {
     return Ebnf{bisonParam.ast};
   }
 
-#if 0
-  expected<AstNode, int> convert(AstNode &&) {
-
-  }
-#endif
-
 };
 
 }
