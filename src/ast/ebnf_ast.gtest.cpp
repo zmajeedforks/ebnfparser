@@ -67,6 +67,28 @@ TEST(Ast, test_000) {
   AstNode{g}.printAst();
 }
 
+TEST(Ast, test_001) {
+
+  Grammar g{
+    {{
+        "Header line 1\n",
+        "Header line 2\n"
+    }},
+    {
+      {
+        "rule1",
+        {{ {{ {{ { false, "sym1" }, { true, "sym2" }, }} }} }}
+      },
+      {
+        "rule2",
+        {{ {{ {{ { true, "sym3" }, { false, "sym4" }, }} }} }}
+      },
+    }
+  };
+
+  AstNode{g}.printAst();
+}
+
 
 }
 
