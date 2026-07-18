@@ -46,17 +46,17 @@ jobs:
 
     runs-on: ${{ matrix.os }}
 
-# early return for os in exhaustive list unless it's scheduled or manual run
-    if: |
-      matrix.exhaustive == false ||
-      github.event_name == 'schedule' ||
-      (github.event_name == 'workflow_dispatch' && inputs.run_exhaustive == true)
-
     env:
       SHELLOPTS: igncr
 
     steps:
+# condition to skip steps for os in exhaustive list unless scheduled or manual run
       - uses: actions/checkout@v4
+        if: |
+          matrix.exhaustive == false ||
+          github.event_name == 'schedule' ||
+          (github.event_name == 'workflow_dispatch' && inputs.run_exhaustive == true)
+
 
 # Linux
 
