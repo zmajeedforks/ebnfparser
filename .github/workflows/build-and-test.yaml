@@ -119,13 +119,11 @@ jobs:
           echo "cmake --version"
           cmake --version
           echo "bison --version"
-          brew --prefix bison
-          bison --version
+          $(brew --prefix bison) --version
           echo "flex --version"
-          brew --prefix flex
-          flex --version
+          $(brew --prefix flex) --version
           echo "ls -l FlexLexer.h"
-          ls -l /usr/include/FlexLexer.h
+          ls -l $(brew --prefix flex)/include/FlexLexer.h
 
 # Non-Cygwin build and test
 
