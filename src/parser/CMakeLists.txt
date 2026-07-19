@@ -17,7 +17,7 @@ target_compile_options(ebnfparser PRIVATE
 )
 
 target_link_libraries(ebnfparser flexbisonlib.ebnfparser)
-target_link_libraries(ebnfparser $<$<CXX_COMPILER_ID:MSVC>:getoptlib>)
+target_link_libraries(ebnfparser $<$<CXX_COMPILER_ID:MSVC>: getoptlib>)
 
 # tests
 
