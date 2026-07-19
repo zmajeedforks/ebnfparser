@@ -60,7 +60,7 @@ add_custom_command(TARGET flexbisonlib.ebnfparser POST_BUILD
 if(NOT APPLE)
   set(OPT_I -i)
 else()
-  set(OPT_I -i "")
+  set(OPT_I "-i \"\"")
 endif()
 
 add_custom_command(TARGET flexbisonlib.ebnfparser POST_BUILD
