@@ -61,22 +61,22 @@ struct BnfHeader {
 // Grammar is sequence of BnfRule
 struct BnfGrammar {
   BnfHeader header{};
-  vector<BnfRule> rules{};
+  vector<BnfRule> rules;
 };
 
 struct BnfRule {
   string nterm{};
-  vector<BnfChoice> choices{};
+  vector<BnfChoice> choices;
 };
 
 // BnfSequence is sequence of BnfSymbol
 struct BnfSequence {
-  vector<BnfSymbol> syms{};
+  vector<BnfSymbol> syms;
 };
 
 // BnfChoice is sequence of BnfSequence
 struct BnfChoice {
-  vector<BnfSequence> seqs{};
+  vector<BnfSequence> seqs;
 };
 
 struct BnfNode: variant<BnfGrammar, BnfHeader, BnfRule, BnfChoice, BnfSequence, BnfSymbol> {
@@ -318,7 +318,7 @@ BnfNode EbnfConvert::convert(const AstNode& ebnf) {
 
   auto ebnfOverload = overload{
 // grammar
-    [this](this auto&& self, const Grammar& g) -> BnfNode {
+    [](this auto&& self, const Grammar& g) -> BnfNode {
       BnfHeader header = get<BnfHeader>(self(g.header));
       vector<BnfRule> rules;
       for(auto& rule: g.rules) {
@@ -338,7 +338,7 @@ BnfNode EbnfConvert::convert(const AstNode& ebnf) {
     },
 
 // alternative
-    [altOverload](this auto&& self, const Alternative& a) -> BnfNode {
+    [altOverload](this auto&&, const Alternative& a) -> BnfNode {
       vector<BnfSequence> seqs;
       for(auto& concat: a.concats) {
         auto newChoice = altOverload(concat);

@@ -28,7 +28,15 @@ jobs:
       matrix:
         include:
           - os: ubuntu-26.04
-            preset: linux-release
+            preset: linux-gcc-release
+            is_cygwin: false
+            exhaustive: false
+          - os: ubuntu-26.04
+            preset: linux-clang-release
+            is_cygwin: false
+            exhaustive: false
+          - os: ubuntu-26.04
+            preset: wasm-release
             is_cygwin: false
             exhaustive: false
           - os: windows-latest
@@ -57,16 +65,27 @@ jobs:
           github.event_name == 'schedule' ||
           (github.event_name == 'workflow_dispatch' && inputs.run_exhaustive == true)
 
-
 # Linux setup
 
       - name: Linux setup
         if: matrix.os == 'ubuntu-26.04'
         run: |
           sudo apt update
-          sudo apt install -y gcc-16 g++-16 cmake ninja-build bison flex libfl-dev
-          echo "CC=gcc-16" >> $GITHUB_ENV
-          echo "CXX=g++-16" >> $GITHUB_ENV
+          sudo apt install -y ninja-build bison flex libfl-dev
+          sudo snap install cmake --classic
+          if [[ ${{ matrix.preset }} == linux-gcc-* ]]; then
+            sudo apt install -y gcc-16 g++-16
+            echo "CC=gcc-16" >> $GITHUB_ENV
+            echo "CXX=g++-16" >> $GITHUB_ENV
+          elif [[ ${{ matrix.preset }} == linux-clang-* ]]; then
+            sudo apt install -y clang-22 lld-22
+            echo "CC=clang-22" >> $GITHUB_ENV
+            echo "CXX=clang++-22" >> $GITHUB_ENV
+          elif [[ ${{ matrix.preset }} == linux-wasm-* ]]; then
+            sudo apt install -y clang-22 lld-22
+            echo "CC=clang-22" >> $GITHUB_ENV
+            echo "CXX=clang++-22" >> $GITHUB_ENV
+          fi
 
       - name: Linux versions
         if: matrix.os == 'ubuntu-26.04'
@@ -76,9 +95,6 @@ jobs:
           uname -a
           echo "lsb_release -a"
           lsb_release -a
-          echo "gcc --version"
-          gcc-16 --version
-          g++-16 --version
           echo "cmake --version"
           cmake --version
           echo "bison --version"
@@ -87,6 +103,23 @@ jobs:
           flex --version
           echo "ls -l FlexLexer.h"
           ls -l /usr/include/FlexLexer.h
+          if [[ ${{ matrix.preset }} == linux-gcc-* ]]; then
+            echo "gcc --version"
+            gcc-16 --version
+            g++-16 --version
+          elif [[ ${{ matrix.preset }} == linux-clang-* ]]; then
+            echo "clang --version"
+            clang-22 --version
+            clang++-22 --version
+          fi
+
+# Webassembly setup
+
+      - name: Webassembly setup
+        if: matrix.preset == 'linux-wasm-release'
+        uses: emscripten-core/setup-emsdk@v16
+        with:
+          version: 'latest'
 
 # Windows setup
 
@@ -128,19 +161,27 @@ jobs:
           $(brew --prefix flex)/bin/flex --version
           echo "ls -l FlexLexer.h"
           ls -l $(brew --prefix flex)/include/FlexLexer.h
+          echo "gcc --version"
+          gcc-16 --version
+          g++-16 --version
 
 # Non-Cygwin build and test
 
       - name: CMake Configure
         if: matrix.is_cygwin == false
-        run: cmake --preset ${{ matrix.preset }}
+        run: |
+          if [[ ${{ matrix.preset }} == linux-wasm-* ]]; then
+            emcmake cmake --preset ${{ matrix.preset }}
+          else
+            cmake --preset ${{ matrix.preset }}
+          fi
 
       - name: Build
         if: matrix.is_cygwin == false
         run: cmake --build --preset ${{ matrix.preset }}
 
       - name: Run Tests
-        if: matrix.is_cygwin == false
+        if: matrix.is_cygwin == false && matrix.preset != 'linux-wasm-release'
         run: ctest --preset ${{ matrix.preset }} --output-on-failure
 
 # Cygwin setup

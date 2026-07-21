@@ -64,7 +64,7 @@ struct Ebnf {
 
   expected<Bnf, int> convert() {
     EbnfConvert ebnf;
-    return Bnf{move(ebnf.convert(root))};
+    return Bnf{ebnf.convert(root)};
   }
 
 };

@@ -30,6 +30,7 @@ SOFTWARE.
 #include <vector>
 #include <set>
 #include <flat_set>
+#include <initializer_list>
 #include <map>
 #include <variant>
 #include <compare>
@@ -42,59 +43,75 @@ SOFTWARE.
 namespace ebnfparser {
 using namespace std;
 
-struct Grammar;
-struct Header;
-struct Rule;
-struct Item;
-struct Repetition;
 struct AltBase;
 struct Alternative;
 struct Concatenation;
-struct Optional;
+struct Grammar;
 struct Group;
-struct CompareAlt;
+struct Header;
+struct Item;
+struct Optional;
+struct Repetition;
+struct Rule;
 
 using Symbol = string;
 using Nonterminal = Symbol;
 using Token = Symbol;
 using Literal = Symbol;
 
-struct Header {
-  vector<string> lines{};
-};
 
-struct Grammar {
-  Header header{};
-  vector<Rule> rules{};
-};
-
-struct Rule {
-  string nonterminal{};
-// hopefully flat_set is fast enough for iterative applications like convert to bnf that doesn't need lookup
-// could go back to vector<Alternative>
-  flat_set<Alternative> alts{};
-};
-
-struct Concatenation {
-  vector<Repetition> reps{};
-
-  strong_ordering operator<=>(const Concatenation& other) const = default;
-};
+// AltBase, base class for Alternative, Optional, Group
 
 struct AltBase {
-  flat_set<Concatenation> concats{};
+  flat_set<Concatenation> concats;
 
-  strong_ordering operator<=>(const AltBase& other) const = default;
+  strong_ordering operator<=>(const AltBase& other) const;
+  bool operator==(const AltBase& other) const = default;
+
 };
+
+// Alternative
 
 struct Alternative: public AltBase {
 };
 
+// Optional
+
 struct Optional: public AltBase {
 };
 
+// Group
+
 struct Group: public AltBase {
 };
+
+// Rule
+// may need to define constructors and destructors outside class if cyclic dependency errors can't be fixed by reordering class definitions
+// Rule(), Rule(string nt, initializer_list<Alternative> init), ~Rule()
+
+struct Rule {
+  string nonterminal{};
+
+// hopefully flat_set is fast enough for iterative applications like convert to bnf that doesn't need lookup
+// could go back to vector<Alternative>
+  flat_set<Alternative> alts;
+
+};
+
+// Header
+
+struct Header {
+  vector<string> lines{};
+};
+
+// Grammar
+
+struct Grammar {
+  Header header{};
+  vector<Rule> rules;
+};
+
+// Item
 
 struct Item: variant<Symbol, Optional, Group> {
   using variant::variant;
@@ -106,55 +123,27 @@ private:
   template<class... Ts> struct overload : Ts... { using Ts::operator()...; };
 };
 
+// Repetition
+
 struct Repetition { 
   bool isRepeated = false;
-  Item item{};
+  Item item;
 
   strong_ordering operator<=>(const Repetition& other) const = default;
 };
 
-inline
-strong_ordering Item::operator<=>(const Item& other) const {
+// Concatenation
 
-  if(index() != other.index()) {
-    return index() <=> other.index();
-  }
+struct Concatenation {
+  vector<Repetition> reps;
 
-// capture other because visit only takes overload as parameter
-// cannot pass second parameter to lambda overloads
-  return visit(overload{
+  strong_ordering operator<=>(const Concatenation& other) const;
+  bool operator==(const Concatenation& other) const = default;
 
-    [&other](const Symbol& s1) -> strong_ordering {
-      const auto& s2 = get<Symbol>(other);
-      return s1 <=> s2;
-    },
+};
 
-    [&other](const Optional& o1) -> strong_ordering {
-      const auto& o2 = get<Optional>(other);
-      return o1 <=> o2;
-    },
 
-    [&other](const Group& g1) -> strong_ordering {
-      const auto& g2 = get<Group>(other);
-      return g1 <=> g2;
-    },
-
-// default match
-    [](const auto&&) -> strong_ordering {
-      println("Item.spaceship: unexpected default match");
-      return {{}};
-    },
-
-// new c++26 variant visit member function, takes 1 parameter
-// old variant visit global function, takes 2 parameters
-#if __cpp_lib_variant >= 202306L
-  });
-#else
-  }, *this);
-#endif
-
-}
-
+// AstNode
 
 struct AstNode: variant<Grammar, Header, Rule, Alternative, Concatenation, Repetition, Optional, Item, Symbol, Group> {
   using variant::variant;
@@ -296,6 +285,33 @@ void AstNode::printAst() const {
   }, *this);
 #endif
 
+}
+
+// these must be defined outside class
+
+// Concatenation
+
+// for flat_set<Concatenation>
+inline
+strong_ordering Concatenation::operator<=>(const Concatenation& other) const {
+  return reps <=> other.reps;
+}
+
+// AltBase
+
+// for flat_set<Alternative>
+inline
+strong_ordering AltBase::operator<=>(const AltBase& other) const {
+  return concats <=> other.concats;
+}
+
+// Item
+
+// for flat_set<Alternative> and flat_set<Concatenation>
+inline
+strong_ordering Item::operator<=>(const Item& other) const {
+    return static_cast<const variant<Symbol, Optional, Group>&>(*this)
+      <=> static_cast<const variant<Symbol, Optional, Group>&>(other);
 }
 
 
