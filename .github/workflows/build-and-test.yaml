@@ -168,11 +168,11 @@ jobs:
 # Non-Cygwin build and test
 
       - name: CMake Configure
-        if: matrix.is_cygwin == false && matrix.preset != linux-wasm-release
+        if: matrix.is_cygwin == false && matrix.preset != 'linux-wasm-release'
         run: cmake --preset ${{ matrix.preset }}
 
       - name: Webassembly CMake Configure
-        if: matrix.is_cygwin == false && matrix.preset == linux-wasm-release
+        if: matrix.is_cygwin == false && matrix.preset == 'linux-wasm-release'
         run: emcmake cmake --preset ${{ matrix.preset }}
 
       - name: Build
