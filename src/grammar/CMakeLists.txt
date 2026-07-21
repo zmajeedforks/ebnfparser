@@ -26,21 +26,23 @@ target_compile_definitions(flexbisonlib.ebnfparser PRIVATE $<$<PLATFORM_ID:CYGWI
 
 target_compile_options(flexbisonlib.ebnfparser PRIVATE
   $<$<CXX_COMPILER_ID:GNU>: -std=c++26 -Wall -Werror -Wextra -pthread -fconcepts-diagnostics-depth=10>
-  $<$<CXX_COMPILER_ID:MSVC>: -std:c++latest -W4 -WX>
+  $<$<CXX_COMPILER_ID:Clang>: -Wall -Werror -Wextra -std=c++26 -pthread -Wno-unqualified-std-cast-call>
 )
 target_compile_options(flexbisonlib.ebnfparser PRIVATE
   $<$<AND:$<CONFIG:debug>,$<CXX_COMPILER_ID:GNU>>: -O0 -ggdb3>
   $<$<AND:$<CONFIG:release>,$<CXX_COMPILER_ID:GNU>>: -Og>
-  $<$<AND:$<CONFIG:debug>,$<CXX_COMPILER_ID:MSVC>>: -Od -Zi>
+  $<$<AND:$<CONFIG:debug>,$<CXX_COMPILER_ID:Clang>>: -O0 -ggdb3>
+  $<$<AND:$<CONFIG:release>,$<CXX_COMPILER_ID:Clang>>: -Og>
 )
 
 message("flexbisonlib: flex include dirs \"${FLEX_INCLUDE_DIRS}\"")
 
 target_include_directories(flexbisonlib.ebnfparser PUBLIC ${CMAKE_SOURCE_DIR}/src ${CMAKE_CURRENT_BINARY_DIR})
 target_include_directories(flexbisonlib.ebnfparser PUBLIC
-  $<$<CXX_COMPILER_ID:MSVC>: ${CMAKE_SOURCE_DIR}/thirdparty/flex>
   $<$<PLATFORM_ID:Darwin>: ${FLEX_INCLUDE_DIRS}>
 )
+
+target_link_libraries(flexbisonlib.ebnfparser ebnfastlib)
 
 add_custom_command(TARGET flexbisonlib.ebnfparser POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_CURRENT_BINARY_DIR}/ebnf_grammar_report.txt ${CMAKE_CURRENT_SOURCE_DIR})
 

@@ -3,10 +3,10 @@
   "$comment": "ebnfparser cmake presets",
   "configurePresets": [
     {
-      "name": "linux-release",
+      "name": "linux-gcc-release",
       "$comment": "Linux GCC release build",
       "generator": "Ninja",
-      "binaryDir": "${sourceDir}/build/linux-release",
+      "binaryDir": "${sourceDir}/build/linux-gcc-release",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release",
         "CMAKE_CXX_COMPILER": "/usr/bin/g++-16",
@@ -14,14 +14,38 @@
       }
     },
     {
-      "name": "linux-debug",
+      "name": "linux-gcc-debug",
       "$comment": "Linux GCC debug build",
       "generator": "Ninja",
-      "binaryDir": "${sourceDir}/build/linux-debug",
+      "binaryDir": "${sourceDir}/build/linux-gcc-debug",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug",
         "CMAKE_CXX_COMPILER": "/usr/bin/g++-16",
         "CMAKE_C_COMPILER": "/usr/bin/gcc-16"
+      }
+    },
+    {
+      "name": "linux-clang-debug",
+      "$comment": "Linux Clang debug build",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/linux-clang-debug",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_C_COMPILER": "clang-22",
+        "CMAKE_CXX_COMPILER": "clang++-22",
+        "CMAKE_EXE_LINKER_FLAGS_INIT": "-fuse-ld=lld"
+      }
+    },
+    {
+      "name": "linux-clang-release",
+      "$comment": "Linux Clang release build",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/linux-clang-release",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_C_COMPILER": "clang-22",
+        "CMAKE_CXX_COMPILER": "clang++-22",
+        "CMAKE_EXE_LINKER_FLAGS_INIT": "-fuse-ld=lld"
       }
     },
     {
@@ -64,7 +88,7 @@
     },
     {
       "name": "mac-release",
-      "$comment": "Mac GCC release build",
+      "$comment": "Mac Clang release build",
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/build/mac-release",
       "cacheVariables": {
@@ -75,7 +99,7 @@
     },
     {
       "name": "mac-debug",
-      "$comment": "Mac GCC debug build",
+      "$comment": "Mac Clang debug build",
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/build/mac-debug",
       "cacheVariables": {
@@ -83,16 +107,44 @@
         "BISON_EXECUTABLE": "$env{BISON_ROOT}/bin/bison",
         "FLEX_EXECUTABLE": "$env{FLEX_ROOT}/bin/flex"
       }
+    },
+    {
+      "name": "linux-wasm-debug",
+      "$comment": "Webassembly debug build",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/linux-wasm-debug",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_CXX_EXTENSIONS": "OFF"
+      }
+    },
+    {
+      "name": "linux-wasm-release",
+      "$comment": "Webassembly release build",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/linux-wasm-release",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_CXX_EXTENSIONS": "OFF"
+      }
     }
   ],
   "buildPresets": [
     {
-      "name": "linux-release",
-      "configurePreset": "linux-release"
+      "name": "linux-gcc-release",
+      "configurePreset": "linux-gcc-release"
     },
     {
-      "name": "linux-debug",
-      "configurePreset": "linux-debug"
+      "name": "linux-gcc-debug",
+      "configurePreset": "linux-gcc-debug"
+    },
+    {
+      "name": "linux-clang-release",
+      "configurePreset": "linux-clang-release"
+    },
+    {
+      "name": "linux-clang-debug",
+      "configurePreset": "linux-clang-debug"
     },
     {
       "name": "windows-release",
@@ -117,16 +169,32 @@
     {
       "name": "mac-debug",
       "configurePreset": "mac-debug"
+    },
+    {
+      "name": "linux-wasm-debug",
+      "configurePreset": "linux-wasm-debug"
+    },
+    {
+      "name": "linux-wasm-release",
+      "configurePreset": "linux-wasm-release"
     }
   ],
   "testPresets": [
     {
-      "name": "linux-release",
-      "configurePreset": "linux-release"
+      "name": "linux-gcc-release",
+      "configurePreset": "linux-gcc-release"
     },
     {
-      "name": "linux-debug",
-      "configurePreset": "linux-debug"
+      "name": "linux-gcc-debug",
+      "configurePreset": "linux-gcc-debug"
+    },
+    {
+      "name": "linux-clang-release",
+      "configurePreset": "linux-clang-release"
+    },
+    {
+      "name": "linux-clang-debug",
+      "configurePreset": "linux-clang-debug"
     },
     {
       "name": "windows-release",
@@ -153,6 +221,14 @@
     {
       "name": "mac-debug",
       "configurePreset": "mac-debug"
+    },
+    {
+      "name": "linux-wasm-debug",
+      "configurePreset": "linux-wasm-debug"
+    },
+    {
+      "name": "linux-wasm-release",
+      "configurePreset": "linux-wasm-release"
     }
   ]
 }

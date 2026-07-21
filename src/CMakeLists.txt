@@ -2,12 +2,13 @@
 
 project(ebnfparser_src)
 
-if(NOT WIN32)
-  message("Generate bison, flex files from src/grammar")
-  add_subdirectory(grammar)
-else()
+# don't run bison, flex for windows and webassembly builds
+if(WIN32 OR EMSCRIPTEN)
   message("Use checked-in generated bison, flex files from src/flexbison.gen")
   add_subdirectory(flexbison.gen)
+else()
+  message("Generate bison, flex files from src/grammar")
+  add_subdirectory(grammar)
 endif()
 
 add_subdirectory(parser)
